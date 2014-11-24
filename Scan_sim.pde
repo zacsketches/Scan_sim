@@ -32,7 +32,7 @@ class Sim_obs{
 
 class Scan_wedge {
 	int half_width = 20;
-	int length = 200;
+	int length = 300;
 	
 	int heading;
 	Wedge_point p, q, r;
@@ -42,6 +42,8 @@ class Scan_wedge {
 	
 	//set each update if the wedge contains an obstruction
 	boolean obstructed = false;
+	int obs_range;
+	int max_range = 360;
 	
 	Scan_wedge(int _heading) {
 		
@@ -58,7 +60,12 @@ class Scan_wedge {
 		println("lower is: " + str(lower));
 	}
 	
-	void clear_obstructed() {obstructed = false;}
+	void clear_obstructed() {
+		obstructed = false;
+		obs_range = max_range;
+	}
+	
+	int range() { return obs_range; }
 	
 	//***********************************************************************
 	//                    CALCULATE BARYCENTRIC CONTAINMENT
@@ -93,6 +100,10 @@ class Scan_wedge {
 	    boolean obs_in_wedge =  0<=a && a<=1 && 0<=b && b<=1 && 0<=c && c<=1;
 		if(!obstructed) {
 			obstructed = obs_in_wedge ? true : false;
+		}
+		if(obstructed) {
+			float range_to_obs = dist(300,300,obs.x,obs.y);
+			obs_range = int(min(range_to_obs, obs_range));
 		}
 	}
 		
@@ -135,31 +146,22 @@ class Sim_scan{
 			obs.add(new Sim_obs());
 		}
 		//println(dice);
-		
-		//update the obstructions
-		// for (int i=0; i<obs.size(); ++i ) {
-		// 	Sim_obs tmp = obs.get(i);
-		// }
-		
-		//remove any obstruction that has passed the center point
+				
+		// update the obstructions then remove any obstruction that 
+		// has passed the center point
 		for (int i =obs.size()-1; i>=0; --i) {
 		  Sim_obs tmp = obs.get(i);
 		  tmp.update();
 		  if (tmp.y > 300) {
 		    obs.remove(i);
+		  } else {
+  			for (int j=0; j<wedges.size(); ++j) {
+  				// for each wedge pass in the tmp_obs and set the obstructed
+  				// variable if the obs is inside the wedge.
+  				Scan_wedge tmp_wedge = wedges.get(j);
+  				tmp_wedge.set_obstructed(tmp);
+  			}
 		  }
-		}
-		
-		//find if any obstruction is inside a wedge
-		for (int i=0; i<obs.size(); ++i) {
-			Sim_obs tmp_obs = obs.get(i);
-
-			for (int j=0; j<wedges.size(); ++j) {
-				// for each wedge pass in the tmp_obs and set the obstructed
-				// variable if the obs is inside the wedge.
-				Scan_wedge tmp_wedge = wedges.get(j);
-				tmp_wedge.set_obstructed(tmp_obs);
-			}
 		}
 		
 	}
@@ -175,6 +177,20 @@ class Sim_scan{
 			Sim_obs tmp = obs.get(i);
 			tmp.display();
 		}
+		//show the range data
+		String scan_msg = "{";
+		for (int i=wedges.size()-1; i>=0 ;--i) {
+			Scan_wedge tmp = wedges.get(i);
+			int range = tmp.range();
+			scan_msg += range;
+			if(i != 0) {
+				scan_msg += ", ";
+			}
+		}
+		scan_msg += "}";
+		fill(0);
+		text(scan_msg, 20, height-20);
+		
 		//reset the obstructed value for the next pass
 		for (int i=0; i<wedges.size(); ++i) {
 			Scan_wedge tmp = wedges.get(i);
