@@ -72,7 +72,7 @@ class Scan_wedge {
 	//
 	//  Barycentric coordinates allow expression of the coordinates of any point
 	//  as a linear combination of a triangle's vertices.  The physical association
-	//  is that you can balance a triangle on any point within its boundary or on
+	//  is that you can balance a triangle on any point within its boundary or
 	//  along its edge with three scalar weights at the vertices defined as
 	//  a, b, and c such that:
 	//      x = a * x1 + b * x2  + c * x3
